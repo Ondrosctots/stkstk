@@ -2,61 +2,47 @@ import streamlit as st
 from reverb_client import ReverbClient
 
 st.set_page_config(page_title="Reverb API Control Panel", layout="wide")
-
 st.title("🎸 Reverb API Control Panel")
 
-# ---------------- TOKEN GATE ----------------
-st.markdown("### 🔐 Enter your Reverb API Token")
-
+# -------- TOKEN GATE --------
 token = st.text_input(
-    "API Token",
-    type="password",
-    help="Token is never stored and is cleared on refresh."
+    "🔐 Enter your Reverb API token",
+    type="password"
 )
 
 if not token:
-    st.warning("Please enter your API token to continue.")
     st.stop()
 
 client = ReverbClient(token)
 
-if st.button("🚪 Clear token"):
-    st.session_state.clear()
-    st.experimental_rerun()
-
-# ---------------- ALL FEATURES ----------------
+# -------- TABS (REAL ONES) --------
 tabs = st.tabs([
-    "👤 Profile",
+    "👤 Account",
     "📦 Listings",
     "🧾 Orders",
     "💬 Messages",
-    "🏷️ Offers",
-    "⭐ Reviews",
     "📬 Addresses",
-    "📃 Watchlist",
-    "💰 Payouts",
-    "🗣️ Feedback"
+    "💰 Payouts"
 ])
 
-# -------- PROFILE --------
+# -------- ACCOUNT --------
 with tabs[0]:
-    st.header("👤 Profile")
-    data = client.get("/my/profile")
-    st.json(data)
+    st.header("👤 Account")
+    st.json(client.get("/my/account"))
 
 # -------- LISTINGS --------
 with tabs[1]:
     st.header("📦 Listings")
     data = client.get("/my/listings", params={"per_page": 50})
+
     if "listings" in data:
         for l in data["listings"]:
             st.markdown(f"""
 **{l['title']}**  
 Price: {l['price']['amount']} {l['price']['currency']}  
-Views: {l.get('view_count', '—')}  
-Watchers: {l.get('watch_count', '—')}  
-State: {l['state']}
+State: {l['state']['description']}
 """)
+            st.caption("⚠️ Reverb API does not expose views, watchers, or cart count.")
             st.divider()
     else:
         st.json(data)
@@ -66,37 +52,17 @@ with tabs[2]:
     st.header("🧾 Orders (Selling)")
     st.json(client.get("/my/orders/selling"))
 
-# -------- MESSAGES --------
+# -------- MESSAGES (v2 ONLY) --------
 with tabs[3]:
     st.header("💬 Messages")
-    st.json(client.get("/my/messages"))
-
-# -------- OFFERS --------
-with tabs[4]:
-    st.header("🏷️ Offers")
-    st.json(client.get("/my/offers"))
-
-# -------- REVIEWS --------
-with tabs[5]:
-    st.header("⭐ Reviews")
-    st.json(client.get("/my/reviews"))
+    st.json(client.get("/my/messages", version="2.0"))
 
 # -------- ADDRESSES --------
-with tabs[6]:
+with tabs[4]:
     st.header("📬 Addresses")
     st.json(client.get("/my/addresses"))
 
-# -------- WATCHLIST --------
-with tabs[7]:
-    st.header("📃 Watchlist")
-    st.json(client.get("/my/lists"))
-
 # -------- PAYOUTS --------
-with tabs[8]:
+with tabs[5]:
     st.header("💰 Payouts")
     st.json(client.get("/my/payouts"))
-
-# -------- FEEDBACK --------
-with tabs[9]:
-    st.header("🗣️ Feedback")
-    st.json(client.get("/my/feedback"))
