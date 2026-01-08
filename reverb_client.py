@@ -6,36 +6,39 @@ class ReverbClient:
         self.headers = {
             "Authorization": f"Bearer {token}",
             "Accept": "application/json",
+            "Accept-Version": "3.0",   # ✅ REQUIRED
             "Content-Type": "application/json"
         }
 
     def get(self, endpoint, params=None):
-        response = requests.get(
+        r = requests.get(
             f"{self.base_url}{endpoint}",
             headers=self.headers,
             params=params
         )
-        return self._handle_response(response)
+        return self._handle(r)
 
     def post(self, endpoint, data=None):
-        response = requests.post(
+        r = requests.post(
             f"{self.base_url}{endpoint}",
             headers=self.headers,
             json=data
         )
-        return self._handle_response(response)
+        return self._handle(r)
 
     def put(self, endpoint, data=None):
-        response = requests.put(
+        r = requests.put(
             f"{self.base_url}{endpoint}",
             headers=self.headers,
             json=data
         )
-        return self._handle_response(response)
+        return self._handle(r)
 
-    def _handle_response(self, response):
-        if response.status_code == 403:
+    def _handle(self, r):
+        if r.status_code == 403:
             return {"error": "❌ Missing OAuth scope for this action"}
-        if response.status_code >= 400:
-            return {"error": response.text}
-        return response.json()
+        if r.status_code == 404:
+            return {"error": "❌ Endpoint not found (check scope or API version)"}
+        if r.status_code >= 400:
+            return {"error": r.text}
+        return r.json()
