@@ -5,15 +5,20 @@ class ReverbClient:
         self.base_url = "https://api.reverb.com/api"
         self.token = token
 
-    def _headers(self, version="3.0"):
-        return {
+    def _headers(self, version=None):
+        headers = {
             "Authorization": f"Bearer {self.token}",
             "Accept": "application/json",
-            "Accept-Version": version,
             "Content-Type": "application/json"
         }
 
-    def get(self, endpoint, version="3.0", params=None):
+        # Only include Accept-Version when explicitly required
+        if version:
+            headers["Accept-Version"] = version
+
+        return headers
+
+    def get(self, endpoint, version=None, params=None):
         r = requests.get(
             f"{self.base_url}{endpoint}",
             headers=self._headers(version),
